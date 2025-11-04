@@ -23,3 +23,9 @@ app.get('/matches', (req, res) => {
 //});
 
 module.exports = app;
+
+// Handle 404 for unknown routes
+app.use((req, res) => {
+  res.status(404).send('Not Found');
+});
+

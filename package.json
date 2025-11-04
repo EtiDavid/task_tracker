@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest",
-    "lint": "eslint . || echo '✅ No lint issues found'"
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
