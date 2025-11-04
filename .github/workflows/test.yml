@@ -26,7 +26,16 @@ jobs:
         run: npm run lint
 
       - name: run test
-        run: npm test
+        run: |
+          npx jest --json --outputFile=test-results.json 
+
+
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-result
+          path: test-result.json
 
 
   run_server:
