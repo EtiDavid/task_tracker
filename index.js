@@ -38,17 +38,24 @@ app.get('/', (req, res) => {
   //res.json(matches);
 //});
 app.get('/matches', async (req, res) => {
-  console.log('📡 Fetching matches from MongoDB...');
-  const matches = await Match.find();
-  res.json(matches);
+  try {
+    console.log('📡 Fetching matches from MongoDB...');
+    const matches = await Match.find();
+    res.json(matches);
+  } catch (error) {
+    console.error('❌ Error fetching matches:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 
-
-module.exports = app;
 
 // Handle 404 for unknown routes
 app.use((req, res) => {
   res.status(404).send('Not Found');
+
+
+
 });
+module.exports = app;
 
