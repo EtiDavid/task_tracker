@@ -94,7 +94,7 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: grant read permission
-        run: chmod 777 /scripts/build.sh
+        run: chmod 777 ./scripts/build.sh
 
       - name: build artifact
         run: npm run build
