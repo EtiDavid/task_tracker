@@ -159,12 +159,13 @@ jobs:
 
       - name: backup_code
         id: backup
-        run: pythons3 backup.py
+        run: python3 backup.py
 
       - name: save time details
         run: |
           TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')
-          echo "artifact_time=$TIMESTAMP" >> $GITHUB_ENV
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          echo "artifact_time=$TIMESTAMP-$SHORT_SHA" >> $GITHUB_ENV
 
       - name: upload backup Artifact
         id: backup_artifact

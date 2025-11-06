@@ -27,3 +27,5 @@ with open("backup.json", "w") as f:
     json.dump(backup_data, f, indent=2)
 
 print("✅ Backup saved as backup.json")
+
+exit(1)
