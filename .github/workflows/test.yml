@@ -144,6 +144,9 @@ jobs:
           echo "🚀 Site deployed to: ${{ steps.deploy-id.outputs.page_url }}"
 
   Backup:
+    environment: football_tracker
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
     needs: [deploy]
     runs-on: ubuntu-latest
     steps:
@@ -152,6 +155,8 @@ jobs:
       - name: install python dependencies
         run: |
           python3 -m pip install pymongo
+          pip install python-dotenv
+
       - name: backup_code
         run: python3 backup.py
 

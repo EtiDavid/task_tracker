@@ -2,10 +2,10 @@
 import os
 import json
 from pymongo import MongoClient
-##from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 # Load from .env only if running locally
-##load_dotenv()
+load_dotenv()
 
 # Get Mongo URI from environment variable
 mongo_uri = os.getenv("MONGODB_URI")
