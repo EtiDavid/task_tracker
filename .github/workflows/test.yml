@@ -44,7 +44,7 @@ jobs:
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-result-${{ github.job }}
+          name: test-result-${{ github.job }}-${{ runner.os }}-${{ matrix.node-version }}
           path: test-results.json
 
 
