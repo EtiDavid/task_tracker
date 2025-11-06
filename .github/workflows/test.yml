@@ -167,6 +167,7 @@ jobs:
           echo "artifact_time=$TIMESTAMP" >> $GITHUB_ENV
 
       - name: upload backup Artifact
+        id: backup_artifact
         uses: actions/upload-artifact@v4
         with:
           name: backup-${{ env.artifact_time }}
@@ -174,7 +175,7 @@ jobs:
 
       - name: backup failure report
         id: error-report
-        if: failure() && steps.backup.outcome == 'failure'
+        if: ${{ failure() && (steps.backup.outcome == 'failure' || steps.backup_artifact.outcome == 'failure') }}
         run: |
           echo "the repo name: ${{ github.repository }}" >> log.txt
           echo "the branch name: ${{ github.ref_name }}" >> log.txt
@@ -182,11 +183,48 @@ jobs:
           echo "Workflow URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> log.txt
 
       - name: upload error
+        id: upload-error
         if: steps.error-report.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: error report-${{ env.artifact_time }}
           path: log.txt
+
+      - name: send email if backup fails
+        if: steps.upload-error.outcome == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "⚠️ Backup Failed for ${{ github.repository }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "CI Bot <${{ secrets.EMAIL_USERNAME }}>"
+          body: |
+            Backup job failed for:
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          attachments: log.txt
+
+      - name: send discord message if backup fails
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        if: steps.upload-error.outcome == 'success'
+        run: |
+          echo "Backup job failed for:" >> discord.txt
+          echo "Repository: ${{ github.repository }}" >> discord.txt
+          echo "Branch: ${{ github.ref_name }}" >> discord.txt
+          echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> discord.txt
+          curl -H "Content-Type: application/json" \
+                -X POST \
+                -d "$(jq -n --arg content "$(cat discord.txt)" '{content: $content}')" \
+                $DISCORD_WEBHOOK
+        
+
+        
+  
 
   report:
     runs-on: ubuntu-latest
