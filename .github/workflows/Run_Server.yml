@@ -2,7 +2,6 @@ name: Run_server
 on:
   workflow_call:
     secrets:
-      description: "Enter the secret details for mongodb"
       mongodb_uri:
         required: true
 
