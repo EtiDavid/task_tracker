@@ -1,0 +1,84 @@
+name: build
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Enter the node version or versions"
+        required: false
+        type: string
+        default: "20"
+
+      os-version:
+        description: "Enter the os runner version you intend to use"
+        required: false
+        type: string
+        default: ubuntu-latest
+
+    outputs:
+      outcomes: ${{ jobs.build.outputs.artifact_path}}
+jobs:
+  build:
+    outputs:
+      artifact_path: ${{ steps.upload.outputs.artifact-path }}
+
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(format('["{0}"]', join(split(inputs.node-version, ','), '","'))) }}
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+
+      - name: setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{matrix.node-version}}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: grant read permission
+        run: chmod +x ./scripts/build.sh
+
+      - name: cache artifact
+        id: cached-artifact
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('frontend/**/*') }}
+
+      - name: build artifact
+        if: steps.cached-artifact.outputs.cache-hit != 'true'
+        run: npm run build
+        continue-on-error: false
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build output (dist/) not found!"
+            exit 1
+          fi
+          echo "✅ Build output verified: dist/"
+
+      - name: upload page artifact
+        id: upload
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Build summary
+        run: |
+          echo "Build completed on $(date)" > build-summary.txt
+          echo "Runner OS: ${{ matrix.os }}" >> build-summary.txt
+          echo "Node version: ${{ matrix.node-version }}" >> build-summary.txt
+          echo "Cache hit: ${{ steps.cached-artifact.outputs.cache-hit }}" >> build-summary.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-summary-${{ runner.os }}-${{ matrix.node-version }}
+          path: build-summary.txt
+        
+          
+      
+
+      

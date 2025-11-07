@@ -1,0 +1,90 @@
+name: Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_call:
+    inputs:
+      mongodb_uri:
+        description: "MongoDB connection string"
+        required: false
+        type: string
+      os-version:
+        description: "OS runner(s)"
+        required: false
+        type: string
+        default: ubuntu-latest
+    outputs:
+      results: ${{ jobs.Backup.outputs.outcomes }}
+
+jobs:
+  Backup:
+    outputs:
+      outcomes: ${{ steps.log.outputs.info }}
+    environment: football_tracker
+    env:
+      MONGODB_URI: ${{ inputs.mongodb_uri || secrets.MONGODB_URI }}
+    strategy:
+      matrix:
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+
+      - name: install python dependencies
+        run: |
+          python3 -m pip install pymongo python-dotenv
+
+      - name: backup_code
+        id: backup
+        run: python3 backup.py
+
+      - name: save time details
+        run: |
+          TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          echo "artifact_time=$TIMESTAMP-$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: upload backup Artifact
+        id: backup_artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ env.artifact_time }}
+          path: backup.json
+
+      - name: backup failure report
+        id: error-report
+        if: failure()
+        run: |
+          echo "repo: ${{ github.repository }}" >> log.txt
+          echo "branch: ${{ github.ref_name }}" >> log.txt
+          echo "time: ${{ github.run_started_at }}" >> log.txt
+          echo "workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> log.txt
+
+      - name: upload error
+        id: upload-error
+        if: failure() && steps.error-report.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-report-${{ env.artifact_time }}
+          path: log.txt
+
+      - name: get log info
+        id: log
+        run: |
+          if [ -f log.txt ]; then
+            STATUS="failed"
+          else
+            STATUS="success"
+          fi
+          echo "info=log.txt" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+
+  notification:
+    if: github.event_name == 'schedule'
+    needs: Backup
+    uses: ./.github/workflows/notify.yml
+    with:
+      job_summary: ${{ toJson(needs) }}

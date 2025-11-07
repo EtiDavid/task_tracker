@@ -1,0 +1,66 @@
+name: Testing
+on:
+  workflow_call:
+    inputs:
+      mongodb_uri:
+        description: "Enter MongoDB connection string"
+        required: false
+        type: string
+
+      node-version:
+        description: "Enter the node version or versions"
+        required: false
+        type: string
+        default: "20"
+
+      test-result:
+        description: "Enter the name of the json file of the test result result"
+        required: false
+        type: string
+        default: "test-results"
+
+      os-version:
+        description: "Enter the os runner version you intend to use"
+        required: false
+        type: string
+        default: ubuntu-latest
+jobs:
+  Test_code:
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(format('["{0}"]', join(split(inputs.node-version, ','), '","'))) }}
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+    runs-on: ${{ matrix.os }}
+    environment: football_tracker
+    env:
+      MONGODB_URI: ${{ inputs.mongodb_uri || secrets.MONGODB_URI }}
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+
+      - name: setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{matrix.node-version}}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: linting
+        run: npm run lint
+
+      - name: run test
+        run: |
+          npx jest --json --outputFile=${{inputs.test-result}}.json 
+          cat ${{inputs.test-result}}.json | jq -r '"Passed: \(.numPassedTests)\nFailed: \(.numFailedTests)\nTotal: \(.numTotalTests)"' > ${{inputs.test-result}}.txt
+
+      - name: upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{inputs.test-result}}-${{ github.job }}-${{ runner.os }}-${{ matrix.node-version }}
+          path: |
+            ${{inputs.test-result}}.json
+            ${{inputs.test-result}}.txt

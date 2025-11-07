@@ -3,10 +3,10 @@ name: Football Tracker CI/CD
 on:
   push:
     branches:
-     - master
+     - main
   pull_request:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 2 * 12 *"
 
 
 jobs:

@@ -1,0 +1,44 @@
+name: Football Tracker CI/CD
+on:
+  push:
+    branches:
+     - master
+  pull_request:
+jobs:
+  Testing:
+    uses: ./.github/workflows/Testing.yml
+    with:
+      mongodb_uri: ${{secrets.MONGODB_URI}}
+
+  Run_Server:
+    needs: Testing
+    uses: ./.github/workflows/Run_Server.yml
+
+  build:
+    needs: Run_Server
+    uses: ./.github/workflows/build.yml
+
+  deploy:
+    needs: build
+    uses: ./.github/workflows/deploy.yml
+
+  backup:
+    needs: deploy
+    uses: ./.github/workflows/backup.yml
+
+  notification:
+    needs: backup
+    continue-on-error: true
+    uses: ./.github/workflows/notify.yml
+    with:
+      job_summary: ${toJson(needs)}
+      receivers_email: dayvidchimere@gmail.com
+      attach: "${{ needs.backup.outputs.results }}"
+
+  Report:
+    if: failure()
+    uses: ./.github/workflows/report.yml
+
+
+
+

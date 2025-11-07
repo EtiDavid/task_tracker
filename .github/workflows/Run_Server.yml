@@ -1,0 +1,87 @@
+name: Run_server
+on:
+  workflow_call:
+    inputs:
+      mongodb_uri:
+        description: "Enter the secret details for mongodb"
+        required: false
+        type: string
+
+      node-version:
+        description: "Enter the node version"
+        required: false
+        type: string
+        default: "20"
+
+      os-version:
+        description: "Enter the os version for you runner"
+        required: false
+        type: string
+        default: ubuntu-latest
+
+      port:
+        description: "Enter the series of port you want to use"
+        required: false
+        type: string
+        default: '3000'
+    outputs:
+      status: ${{ jobs.run_server.outputs.result }}
+jobs:
+  run_server:
+    outputs:
+      result: ${{steps.run-test.outputs.status}}
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(format('["{0}"]', join(split(inputs.node-version, ','), '","'))) }}
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+        port: ${{ fromJSON(format('["{0}"]', join(split(inputs.port, ','), '","'))) }}
+    runs-on: ${{matrix.os}}
+    environment: football_tracker
+    env:
+      PORT: ${{matrix.port}}
+      MONGODB_URI: ${{ inputs.mongodb_uri || secrets.MONGODB_URI }}
+
+
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+
+      - name: setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{matrix.node-version}}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: Debug MONGODB_URI presence
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "❌ MONGODB_URI is empty"
+            exit 1
+          else
+            echo "✅ MONGODB_URI is loaded"
+            echo "Length: ${#MONGODB_URI}"
+          fi
+
+
+      - name: Start server and call url
+        id: run-test
+        run: |
+          npm start > server.log 2>&1 & sleep 10
+          if curl -f http://localhost:$PORT/matches;
+          then
+              echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-${{ matrix.os }}-${{ matrix.port }}
+          path: server.log

@@ -1,0 +1,38 @@
+name: Deployment
+on:
+  workflow_call:
+    inputs:
+      os-version:
+        description: "Enter the os version for you runner"
+        required: false
+        type: string
+        default: ubuntu-latest
+
+    outputs: ${{jobs.deploy.outputs.page_url}}
+jobs:
+  deploy:
+    outputs:
+      page_url: ${{ steps.deploy-id.outputs.page_url }}
+
+    strategy:
+      matrix:
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy-id.outputs.page_url }}
+
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+
+      - name: deploy artifact to Github pages
+        id: deploy-id
+        uses: actions/deploy-pages@v4
+
+      - name: Print deployment URL
+        run: |
+          echo "🚀 Site deployed to: ${{ steps.deploy-id.outputs.page_url }}"

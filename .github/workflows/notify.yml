@@ -1,0 +1,69 @@
+name: Notify on error
+
+on:
+  workflow_call:
+    inputs:
+      receivers_email:
+        description: "Email of the person expecting the log details"
+        required: false
+        type: string
+
+      job_summary:
+        description: "JSON of all job results (use toJson(needs) from caller)"
+        required: true
+        type: string
+
+      os-version:
+        description: "Comma-separated list of runner OS versions"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+
+      attach:
+        description: " any file to attach"
+        required: false
+        type: string
+        default: "report.txt"
+
+jobs:
+  notify_on_error:
+    strategy:
+      matrix:
+        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Save job summary JSON
+        run: echo '${{ inputs.job_summary }}' > job_summary.json
+
+      - name: Convert JSON to text report
+        run: |
+          echo "🧩 Job Summary Report" > report.txt
+          cat job_summary.json | jq -r 'to_entries[] | "\(.key): \(.value.result)"' >> report.txt
+          echo "Repository: ${{ github.repository }}" >> report.txt
+          echo "Branch: ${{ github.ref_name }}" >> report.txt
+          echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> report.txt
+          cat report.txt
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "⚠️ Job Summary Report - ${{ github.repository }}"
+          to: ${{ inputs.receivers_email || secrets.EMAIL_TO }}
+          from: "CI Bot <${{ secrets.EMAIL_USERNAME }}>"
+          body: |
+            $(cat report.txt)
+          attachments: ${{inputs.attach}}
+
+      - name: Send Discord message
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$(jq -n --arg content "$(cat report.txt)" '{content: $content}')" \
+               $DISCORD_WEBHOOK
