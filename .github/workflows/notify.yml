@@ -7,6 +7,8 @@ on:
         required: true
       EMAIL_PASSWORD:
         required: true
+      DISCORD_WEBHOOK:
+        required: true
     inputs:
       receivers_email:
         description: "Email of the person expecting the log details"
