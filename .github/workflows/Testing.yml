@@ -1,4 +1,5 @@
 name: Testing
+
 on:
   workflow_call:
     inputs:
@@ -6,24 +7,22 @@ on:
         description: "Enter MongoDB connection string"
         required: false
         type: string
-
       node-version:
-        description: "Enter the node version or versions"
+        description: "Node version(s)"
         required: false
         type: string
         default: "20"
-
       test-result:
-        description: "Enter the name of the json file of the test result result"
+        description: "Base name for test result files"
         required: false
         type: string
         default: "test-results"
-
       os-version:
-        description: "Enter the os runner version you intend to use"
+        description: "Runner OS"
         required: false
         type: string
-        default: ubuntu-latest
+        default: "ubuntu-latest"
+
 jobs:
   Test_code:
     strategy:
@@ -33,34 +32,35 @@ jobs:
     runs-on: ${{ matrix.os }}
     environment: football_tracker
     env:
-      MONGODB_URI: ${{ inputs.mongodb_uri || secrets.MONGODB_URI }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI || inputs.mongodb_uri }}
+
     steps:
-      - name: get code
+      - name: Get code
         uses: actions/checkout@v4
 
-      - name: setup Node
+      - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: ${{matrix.node-version}}
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: linting
+      - name: Linting
         run: npm run lint
 
-      - name: run test
+      - name: Run tests
         run: |
-          npx jest --json --outputFile=${{inputs.test-result}}.json 
-          cat ${{inputs.test-result}}.json | jq -r '"Passed: \(.numPassedTests)\nFailed: \(.numFailedTests)\nTotal: \(.numTotalTests)"' > ${{inputs.test-result}}.txt
+          npx jest --json --outputFile=${{ inputs.test-result }}.json 
+          cat ${{ inputs.test-result }}.json | jq -r '"Passed: \(.numPassedTests)\nFailed: \(.numFailedTests)\nTotal: \(.numTotalTests)"' > ${{ inputs.test-result }}.txt
 
-      - name: upload artifact
+      - name: Upload artifacts
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{inputs.test-result}}-${{ github.job }}-${{ runner.os }}-${{ matrix.node-version }}
+          name: ${{ inputs.test-result }}-${{ github.job }}-${{ runner.os }}-${{ matrix.node-version }}
           path: |
-            ${{inputs.test-result}}.json
-            ${{inputs.test-result}}.txt
+            ${{ inputs.test-result }}.json
+            ${{ inputs.test-result }}.txt
