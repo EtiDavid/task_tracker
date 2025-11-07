@@ -27,6 +27,7 @@ on:
 
 jobs:
   notify_on_error:
+    environment: football_tracker
     strategy:
       matrix:
         os: ${{ fromJSON(inputs.os-version) }}

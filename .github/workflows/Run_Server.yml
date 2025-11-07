@@ -1,6 +1,10 @@
 name: Run_server
 on:
   workflow_call:
+    secrets:
+      mongodb_uri:
+        required: false
+
     inputs:
       mongodb_uri:
         description: "Enter the secret details for mongodb"
@@ -40,7 +44,7 @@ jobs:
     environment: football_tracker
     env:
       PORT: ${{matrix.port}}
-      MONGODB_URI: ${{ secrets.MONGODB_URI || inputs.mongodb_uri }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI || secret.mongodb_uri }}
 
 
     steps:
