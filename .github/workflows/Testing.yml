@@ -13,8 +13,8 @@ on:
       node-version:
         description: "Node version(s)"
         required: false
-        type: string
-        default: "20"
+        type: array
+        default: [20]
       test-result:
         description: "Base name for test result files"
         required: false
@@ -23,15 +23,15 @@ on:
       os-version:
         description: "Runner OS"
         required: false
-        type: string
-        default: "ubuntu-latest"
+        type: array
+        default: [ubuntu-latest]
 
 jobs:
   Test_code:
     strategy:
       matrix:
-        node-version: ${{ fromJSON(inputs.node-version) }}
-        os: ${{ fromJSON(inputs.os-version) }}
+        node-version: ${{ inputs.node-version }}
+        os: ${{ inputs.os-version }}
     runs-on: ${{ matrix.os }}
     environment: football_tracker
     env:

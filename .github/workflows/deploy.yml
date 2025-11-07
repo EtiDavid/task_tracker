@@ -3,11 +3,10 @@ on:
   workflow_call:
     inputs:
       os-version:
-        description: "Enter the os version for you runner"
+        description: "Runner OS"
         required: false
-        type: string
-        default: ubuntu-latest
-
+        type: array
+        default: [ ubuntu-latest ]
     outputs:
       results:
         value: ${{jobs.deploy.outputs.page_url}}
@@ -18,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        os: ${{ fromJSON(inputs.os-version) }}
+        os: ${{ inputs.os-version }}
     runs-on: ${{ matrix.os }}
     permissions:
       pages: write

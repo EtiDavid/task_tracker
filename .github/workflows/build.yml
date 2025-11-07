@@ -5,14 +5,14 @@ on:
       node-version:
         description: "Enter the node version or versions"
         required: false
-        type: string
-        default: "20"
+        type: array
+        default: [20]
 
       os-version:
-        description: "Enter the os runner version you intend to use"
+        description: "Runner OS"
         required: false
-        type: string
-        default: ubuntu-latest
+        type: array
+        default: [ ubuntu-latest ]
 
     outputs:
       results:
@@ -25,8 +25,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ${{ fromJSON(inputs.node-version) }}
-        os: ${{ fromJSON(inputs.os-version) }}
+        node-version: ${{ (inputs.node-version) }}
+        os: ${{ (inputs.os-version) }}
     runs-on: ${{matrix.os}}
     steps:
       - name: get code
