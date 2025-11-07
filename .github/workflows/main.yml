@@ -6,10 +6,20 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   Testing:
     uses: ./.github/workflows/Testing.yml
-
+    with:
+      mongodb_uri: ${{ secrets.MONGODB_URI }}
 
   Run_Server:
     needs: Testing
@@ -28,12 +38,14 @@ jobs:
     uses: ./.github/workflows/backup.yml
 
   Notification:
+    if: always()
     needs: Backup
+    continue-on-error: true
     uses: ./.github/workflows/notify.yml
     with:
       job_summary: ${{ toJson(needs) }}
       receivers_email: "dayvidchimere@gmail.com"
-      attach: "${{ needs.Backup.outputs.results }}"
+      attach: "${{ needs.backup.outputs.results }}"
 
   Report:
     if: failure()
