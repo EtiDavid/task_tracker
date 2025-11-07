@@ -6,7 +6,7 @@ on:
   workflow_call:
     secrets:
       mongodb_uri:
-        required: false
+        required: true
     inputs:
       mongodb_uri:
         description: "MongoDB connection string"
@@ -92,5 +92,8 @@ jobs:
     if: github.event_name == 'schedule'
     needs: Backup
     uses: ./.github/workflows/notify.yml
+    secrets:
+      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
     with:
       job_summary: ${{ toJson(needs) }}
