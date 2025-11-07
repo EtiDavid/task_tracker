@@ -9,8 +9,7 @@ on:
 jobs:
   Testing:
     uses: ./.github/workflows/Testing.yml
-    with:
-      mongodb_uri: ${{ secrets.MONGODB_URI }}
+
 
   Run_Server:
     needs: Testing
@@ -30,7 +29,6 @@ jobs:
 
   Notification:
     needs: Backup
-    continue-on-error: true
     uses: ./.github/workflows/notify.yml
     with:
       job_summary: ${{ toJson(needs) }}
