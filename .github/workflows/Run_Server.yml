@@ -44,7 +44,7 @@ jobs:
     environment: football_tracker
     env:
       PORT: ${{matrix.port}}
-      MONGODB_URI: ${{ secrets.MONGODB_URI || secret.mongodb_uri }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI || secrets.mongodb_uri }}
 
 
     steps:
