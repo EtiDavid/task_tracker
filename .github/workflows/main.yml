@@ -1,4 +1,4 @@
-name: Football Tracker CI/CD
+name: Football Tracker CI/CD APP
 on:
   push:
     branches:

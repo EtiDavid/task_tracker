@@ -28,8 +28,8 @@ jobs:
   Test_code:
     strategy:
       matrix:
-        node-version: ${{ fromJSON(format('["{0}"]', join(split(inputs.node-version, ','), '","'))) }}
-        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+        node-version: ${{ fromJSON(inputs.node-version) }}
+        os: ${{ fromJSON(inputs.os-version) }}
     runs-on: ${{ matrix.os }}
     environment: football_tracker
     env:

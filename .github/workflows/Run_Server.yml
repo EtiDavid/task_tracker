@@ -32,9 +32,9 @@ jobs:
       result: ${{steps.run-test.outputs.status}}
     strategy:
       matrix:
-        node-version: ${{ fromJSON(format('["{0}"]', join(split(inputs.node-version, ','), '","'))) }}
-        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
-        port: ${{ fromJSON(format('["{0}"]', join(split(inputs.port, ','), '","'))) }}
+        node-version: ${{ fromJSON(inputs.node-version) }}
+        os: ${{ fromJSON(inputs.os-version) }}
+        port: ${{ fromJSON(inputs.port) }}
     runs-on: ${{matrix.os}}
     environment: football_tracker
     env:

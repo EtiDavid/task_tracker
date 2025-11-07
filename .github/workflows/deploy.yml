@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: ${{ fromJSON(format('["{0}"]', join(split(inputs.os-version, ','), '","'))) }}
+        os: ${{ fromJSON(inputs.os-version) }}
     runs-on: ${{ matrix.os }}
     permissions:
       pages: write
