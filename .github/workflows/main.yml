@@ -1,9 +1,11 @@
 name: Football Tracker CI/CD APP
+
 on:
   push:
     branches:
-     - master
+      - master
   pull_request:
+
 jobs:
   Testing:
     uses: ./.github/workflows/Testing.yml
@@ -14,31 +16,27 @@ jobs:
     needs: Testing
     uses: ./.github/workflows/Run_Server.yml
 
-  build:
+  Build:
     needs: Run_Server
     uses: ./.github/workflows/build.yml
 
-  deploy:
-    needs: build
+  Deploy:
+    needs: Build
     uses: ./.github/workflows/deploy.yml
 
-  backup:
-    needs: deploy
+  Backup:
+    needs: Deploy
     uses: ./.github/workflows/backup.yml
 
-  notification:
-    needs: backup
+  Notification:
+    needs: Backup
     continue-on-error: true
     uses: ./.github/workflows/notify.yml
     with:
       job_summary: ${{ toJson(needs) }}
-      receivers_email: dayvidchimere@gmail.com
+      receivers_email: "dayvidchimere@gmail.com"
       attach: "${{ needs.Backup.outputs.results }}"
 
   Report:
     if: failure()
     uses: ./.github/workflows/report.yml
-
-
-
-
