@@ -16,8 +16,8 @@ on:
       os-version:
         description: "Runner OS"
         required: false
-        type: array
-        default: [ ubuntu-latest ]
+        type: string
+        default: '[ "ubuntu-latest" ]'
 
       attach:
         description: " any file to attach"
@@ -29,7 +29,7 @@ jobs:
   notify_on_error:
     strategy:
       matrix:
-        os: ${{ inputs.os-version }}
+        os: ${{ fromJSON(inputs.os-version) }}
     runs-on: ${{ matrix.os }}
 
     steps:

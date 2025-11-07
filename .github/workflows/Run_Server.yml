@@ -8,22 +8,22 @@ on:
         type: string
 
       node-version:
-        description: "Enter the node version"
+        description: "Node version(s)"
         required: false
-        type: array
-        default: [20]
+        type: string
+        default: '["20"]'
 
       os-version:
         description: "Runner OS"
         required: false
-        type: array
-        default: [ ubuntu-latest ]
+        type: string
+        default: '[ "ubuntu-latest" ]'
 
       port:
         description: "Enter the series of port you want to use"
         required: false
-        type: array
-        default: [3000]
+        type: string
+        default: '["3000"]'
     outputs:
       results:
         value: ${{ jobs.run_server.outputs.result }}
@@ -33,9 +33,9 @@ jobs:
       result: ${{steps.run-test.outputs.status}}
     strategy:
       matrix:
-        node-version: ${{ inputs.node-version }}
-        os: ${{ inputs.os-version }}
-        port: ${{ inputs.port }}
+        node-version: ${{ fromJSON(inputs.node-version) }}
+        os: ${{ fromJSON(inputs.os-version) }}
+        port: ${{ fromJSON(inputs.port) }}
     runs-on: ${{matrix.os}}
     environment: football_tracker
     env:

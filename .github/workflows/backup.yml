@@ -12,8 +12,8 @@ on:
       os-version:
         description: "Runner OS"
         required: false
-        type: array
-        default: [ ubuntu-latest ]
+        type: string
+        default: '[ "ubuntu-latest" ]'
 
     outputs:
       results:

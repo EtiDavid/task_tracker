@@ -3,39 +3,42 @@ name: Testing
 on:
   workflow_call:
     secrets:
-      MONGODB_URI:
+      mongodb_uri:
         required: false
     inputs:
       mongodb_uri:
         description: "Enter MongoDB connection string"
         required: false
         type: string
+
       node-version:
         description: "Node version(s)"
         required: false
-        type: array
-        default: [20]
+        type: string
+        default: '["20"]'
+
       test-result:
         description: "Base name for test result files"
         required: false
         type: string
         default: "test-results"
+
       os-version:
         description: "Runner OS"
         required: false
-        type: array
-        default: [ubuntu-latest]
+        type: string
+        default: '[ "ubuntu-latest" ]'
 
 jobs:
   Test_code:
     strategy:
       matrix:
-        node-version: ${{ inputs.node-version }}
-        os: ${{ inputs.os-version }}
+        node-version: ${{ fromJSON(inputs.node-version) }}
+        os: ${{ fromJSON(inputs.os-version) }}
     runs-on: ${{ matrix.os }}
     environment: football_tracker
     env:
-      MONGODB_URI: ${{ secrets.MONGODB_URI || inputs.mongodb_uri }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI || secrets.mongodb_uri }}
 
     steps:
       - name: Get code
