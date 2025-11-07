@@ -95,5 +95,6 @@ jobs:
     secrets:
       EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
       EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
     with:
       job_summary: ${{ toJson(needs) }}
