@@ -1,4 +1,4 @@
-name: Run_server
+name: Integration_Test
 on:
   workflow_call:
     secrets:
@@ -25,7 +25,10 @@ on:
         default: '["3000"]'
     outputs:
       results:
-        value: ${{ jobs.run_server.outputs.result }}
+        value: |
+          ${{ jobs.run_server.outputs.result }}
+          ${{ jobs.run_server.outputs.result }}
+
 jobs:
   run_server:
     outputs:
@@ -62,21 +65,46 @@ jobs:
           fi
 
 
-      - name: Start server and call url
-        id: run-test
+      - name: Start backend server and call url
+        id: backend
         run: |
-          npm start > server.log 2>&1 & sleep 10
+          npm start > backend.log 2>&1 & sleep 10
           if curl -f http://localhost:$PORT/matches;
           then
-              echo "status=success" >> $GITHUB_OUTPUT
+              echo "status_backend=success" >> $GITHUB_OUTPUT
           else
-            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "status_backend=failure" >> $GITHUB_OUTPUT
             exit 1
           fi
+
+      - name: start frontend
+        id: frontend
+        run: |
+          npx http-server ./frontend -p 8080 > frontend.log 2>&1 & sleep 10
+          if curl -s http://localhost:8080 | grep -q "Football" 
+
+          then
+              echo "status_frontend=success" >> $GITHUB_OUTPUT
+          else
+            echo "status_frontend=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
 
       - name: Upload server log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: server-log-${{ matrix.os }}-${{ matrix.port }}
-          path: server.log
+          path: |
+            backend.log
+            frontend.log
+
+      - name : kill server
+        run: kill $(lsof -t -i:3000 -i:8080) || true
+
+      - name: Print summary
+        if: success()
+        run: echo "✅ Integration test passed on ${{ matrix.os }} (Node ${{ matrix.node-version }})"
+
+

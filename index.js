@@ -5,6 +5,8 @@ const app = express();
 
 
 
+const cors = require('cors');
+app.use(cors());
 
 //const matches = [
   //{ id: 1, home: 'Arsenal', away: 'Chelsea', score: '2-0' },
