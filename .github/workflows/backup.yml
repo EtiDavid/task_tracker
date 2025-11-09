@@ -30,7 +30,7 @@ jobs:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
     strategy:
       matrix:
-        os: ${{ fromJSON(inputs.os-version) }}
+        os: ${{ fromJSON(inputs.os-version || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
 
     steps:
